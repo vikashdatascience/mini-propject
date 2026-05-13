@@ -1,0 +1,1108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GrammarMaster | Interactive Learning</title>
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --secondary: #3498db;
+            --success: #27ae60;
+            --error: #e74c3c;
+            --light: #ecf0f1;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            display: flex;
+            background-color: #f4f7f6;
+        }
+
+        /* Sidebar */
+        #sidebar {
+            width: 250px;
+            background: var(--primary);
+            color: white;
+            height: 100vh;
+            padding: 20px;
+            position: fixed;
+        }
+
+        #sidebar h2 { font-size: 1.2rem; border-bottom: 1px solid #555; padding-bottom: 10px; }
+
+        .menu-item {
+            padding: 10px;
+            cursor: pointer;
+            transition: 0.3s;
+            border-radius: 5px;
+            margin-bottom: 5px;
+        }
+
+        .menu-item:hover { background: var(--secondary); }
+        .active { background: var(--secondary); font-weight: bold; }
+
+        /* Main Content */
+        #main-content {
+            margin-left: 290px;
+            padding: 40px;
+            max-width: 800px;
+            width: 100%;
+        }
+
+        .card {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        h1 { color: var(--primary); }
+        
+        .example-box {
+            background: #eef9ff;
+            border-left: 5px solid var(--secondary);
+            padding: 15px;
+            margin: 15px 0;
+            font-style: italic;
+        }
+
+        /* Quiz Section */
+        .quiz-option {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            margin: 8px 0;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background: white;
+            cursor: pointer;
+            text-align: left;
+            font-size: 1rem;
+        }
+
+        .quiz-option:hover { background: #f0f0f0; }
+
+        #feedback {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 5px;
+            display: none;
+            font-weight: bold;
+        }
+
+        .correct { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .incorrect { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+
+        button#next-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="sidebar">
+        <h2>Grammar Modules</h2>
+        <div class="menu-item active" onclick="loadModule(0)">1. Simple Sentences</div>
+        <div class="menu-item" onclick="loadModule(1)">2. Compound Sentences</div>
+        <div class="menu-item" onclick="loadModule(2)">3. Complex Sentences</div>
+        <div class="menu-item" onclick="loadModule(3)">4. Active vs. Passive</div>
+    </div>
+
+    <div id="main-content">
+        <div id="lesson-area">
+            <h1 id="title">Simple Sentences</h1>
+            <div class="card">
+                <h3>The Theory</h3>
+                <p id="theory-text">A simple sentence contains a subject and a verb, and it expresses a complete thought. It is also known as an independent clause.</p>
+                <div class="example-box" id="example-text">
+                    Example: "The cat slept on the mat."
+                </div>
+            </div>
+        </div>
+
+        <div id="quiz-area" class="card">
+            <h3>Practice Exercise</h3>
+            <p id="question-text">Identify the simple sentence:</p>
+            <div id="options-container">
+                <!-- Options injected by JS -->
+            </div>
+            <div id="feedback"></div>
+            <button id="next-btn" style="display:none;" onclick="nextQuestion()">Next Lesson →</button>
+        </div>
+    </div>
+
+    <script>
+        const grammarData = [
+            {
+                title: "Simple Sentences",
+                theory: "A simple sentence consists of one independent clause. It has a subject and a predicate.",
+                example: "Example: 'She writes every day.'",
+                question: "Which of these is a simple sentence?",
+                options: [
+                    { text: "The dog barked.", correct: true },
+                    { text: "The dog barked and the cat ran.", correct: false },
+                    { text: "Because the dog barked.", correct: false }
+                ],
+                explanation: "Correct! 'The dog barked' has one subject (dog) and one verb (barked)."
+            },
+            {
+                title: "Compound Sentences",
+                theory: "A compound sentence joins two independent clauses together, usually with a conjunction like 'and', 'but', or 'or'.",
+                example: "Example: 'I cooked dinner, and he washed the dishes.'",
+                question: "Which sentence uses a coordinating conjunction (FANBOYS)?",
+                options: [
+                    { text: "I like coffee.", correct: false },
+                    { text: "I like coffee, but Mary likes tea.", correct: true },
+                    { text: "Although I like coffee.", correct: false }
+                ],
+                explanation: "Great! 'But' is a conjunction used to connect two independent ideas."
+            },
+            {
+                title: "Complex Sentences",
+                theory: "A complex sentence has one independent clause and at least one dependent (subordinate) clause.",
+                example: "Example: 'Because it was raining, we stayed inside.'",
+                question: "Identify the complex sentence:",
+                options: [
+                    { text: "He ran fast.", correct: false },
+                    { text: "He ran fast, yet he missed the bus.", correct: false },
+                    { text: "After he ran the race, he felt tired.", correct: true }
+                ],e ran the race' is a dependent clause."
+            }
+        ];
+
+        let currentModule = 0;
+
+        function loadModule(index) {
+            currentModule = index;
+            const data = grammarData[index];
+            
+            // Update Menu UI
+            document.querySelectorAll('.menu-item').forEach((item, idx) => {
+                item.classList.toggle('active', idx === index);
+            });
+
+            // Update Content
+            document.getElementById('title').innerText = data.title;
+            document.getElementById('theory-text').innerText = data.theory;
+            document.getElementById('example-text').innerText = data.example;
+            document.getElementById('question-text').innerText = data.question;
+
+            // Update Quiz
+            const optionsContainer = document.getElementById('options-container');
+            optionsContainer.innerHTML = '';
+            data.options.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = 'quiz-option';
+                btn.innerText = opt.text;
+                btn.onclick = () => checkAnswer(opt.correct, data.explanation);
+                optionsContainer.appendChild(btn);
+            });
+
+            // Reset feedback
+            const feedback = document.getElementById('feedback');
+            feedback.style.display = 'none';
+            document.getElementById('next-btn').style.display = 'none';
+        }
+
+        function checkAnswer(isCorrect, msg) {
+            const feedback = document.getElementById('feedback');
+            feedback.style.display = 'block';
+            if (isCorrect) {
+                feedback.className = 'correct';
+                feedback.innerText = msg;
+                document.getElementById('next-btn').style.display = 'block';
+            } else {
+                feedback.className = 'incorrect';
+                feedback.innerText = "Try again! Look for the specific pattern mentioned in the theory.";
+            }
+        }
+
+        function nextQuestion() {
+            if (currentModule < grammarData.length - 1) {
+                loadModule(currentModule + 1);
+            } else {
+                alert("Congratulations! You've completed the prototype path.");
+            }
+        }
+
+        // Initialize first module
+        loadModule(0);
+    </script>
+</body>
+</html>  
+                explanation: "Correct! 'After"
+
+                
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

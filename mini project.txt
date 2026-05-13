@@ -1,0 +1,10 @@
+#include <stdio.h>
+
+int main()
+{
+    char str[30]= "hello";
+    char str2[]= "world";
+    strcast(str,str2);
+    printf("%c", str);
+    printf("fullname:%s",str+str2);
+}
